@@ -22,6 +22,11 @@ def mt_gamma(epoch, f=100., n_cycles=12, time_bandwidth=20., **kw):
         Time x (Full) Bandwidth product.
     karg : dict | {}
         Additional arguments are passed to the `tfr_multitaper` function.
+
+    Returns
+    -------
+    tf : AverageTFR | EpochsTFR
+        The averaged or single-trial power.
     """
     assert isinstance(f, (int, float))
     freq = np.array([f])
