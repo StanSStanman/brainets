@@ -37,7 +37,8 @@ setup(
     install_requires=[
         "numpy",
         "scipy",
-        "mne"
+        "mne",
+        "pandas"
     ],
     dependency_links=[],
     author=AUTHOR,

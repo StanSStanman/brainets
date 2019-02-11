@@ -1,7 +1,28 @@
 """Spectral functions."""
+import logging
+
 import numpy as np
 
 from mne.time_frequency import tfr_multitaper
+
+
+logger = logging.getLogger('brainets')
+
+def mt_config(name, freqs):
+    """Get multitaper input parameters according to a config.
+
+    Parameters
+    ----------
+    name : string
+        Configuration name. Could be 
+    """
+    if name == 'julien':
+        is_low = freqs <= 30.
+        n_cycles = np.zeros_like(freqs)
+        n_cycles[is_low] = freqs[is_low] / 6.
+        n_cycles[~is_low] = 0.2 * freqs[~is_low]
+        time_bandwidth = 4.
+    return n_cycles, 
 
 
 def mt_gamma(epoch, f=100., n_cycles=12, time_bandwidth=20., **kw):
