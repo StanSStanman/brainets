@@ -8,27 +8,27 @@ from mne.time_frequency import tfr_multitaper
 
 logger = logging.getLogger('brainets')
 
-def mt_config(name, freqs):
-    """Get multitaper input parameters according to a config.
+# def mt_config(name, freqs):
+#     """Get multitaper input parameters according to a config.
 
-    Parameters
-    ----------
-    name : string
-        Configuration name. Could be 
-    """
-    if name == 'julien':
-        is_low = freqs <= 30.
-        n_cycles = np.zeros_like(freqs)
-        n_cycles[is_low] = freqs[is_low] / 6.
-        n_cycles[~is_low] = 0.2 * freqs[~is_low]
-        time_bandwidth = 4.
-    return n_cycles, 
+#     Parameters
+#     ----------
+#     name : string
+#         Configuration name.
+#     """
+#     if name == 'julien':
+#         is_low = freqs <= 30.
+#         n_cycles = np.zeros_like(freqs)
+#         n_cycles[is_low] = freqs[is_low] / 6.
+#         n_cycles[~is_low] = 0.2 * freqs[~is_low]
+#         time_bandwidth = 4.
+#     return n_cycles,
 
 
-def mt_gamma(epoch, f=100., n_cycles=12, time_bandwidth=20., **kw):
-    """Extract gamma activity around a central frequency.
+def mt_hga(epoch, f=100., n_cycles=12, time_bandwidth=20., **kw):
+    """Extract high-gamma activity (HGA) around a central frequency.
 
-    The gamma is extracted using the `mne.time_frequency.tfr_multitaper`
+    The HGA is extracted using the `mne.time_frequency.tfr_multitaper`
     function.
 
     Parameters
@@ -36,7 +36,7 @@ def mt_gamma(epoch, f=100., n_cycles=12, time_bandwidth=20., **kw):
     epoch : mne.Epochs
         Instance of mne.Epochs
     f : float | 100.
-        The central gamma frequency
+        The central high-gamma frequency
     n_cycles : int | 12
         The number of cycles to use for the frequency resolution.
     time_bandwidth : float | 20.
@@ -47,7 +47,7 @@ def mt_gamma(epoch, f=100., n_cycles=12, time_bandwidth=20., **kw):
     Returns
     -------
     tf : AverageTFR | EpochsTFR
-        The averaged or single-trial power.
+        The averaged or single-trial HGA.
     """
     assert isinstance(f, (int, float))
     freq = np.array([f])
