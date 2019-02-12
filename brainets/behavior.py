@@ -143,7 +143,8 @@ def behavioral_analysis(tr_team, tr_play, tr_win, save_as=None,
     # Compute the cumulative sum per team
     behavior = dict()
     col = ['Team', 'Play', 'Win', 'O|A', 'nO|A', 'O|nA', 'nO|nA', 'f(O|A)',
-           'f(nO|A)', 'f(O|nA)', 'f(nO|nA)', 'eP(O|A)', 'eP(O|nA)', 'edP']
+           'f(nO|A)', 'f(O|nA)', 'f(nO|nA)', 'eP(O|A)', 'eP(O|nA)', 'edP',
+           'uedP']
     logger.info('    - Split cumulative sum per team')
     for team in np.unique(tr_team):
         _df = dict()
@@ -163,6 +164,7 @@ def behavioral_analysis(tr_team, tr_play, tr_win, save_as=None,
         _df['eP(O|A)'] = _df['f(O|A)'] / (_df['f(O|A)'] + _df['f(nO|A)'])
         _df['eP(O|nA)'] = _df['f(O|nA)'] / (_df['f(O|nA)'] + _df['f(nO|nA)'])
         _df['edP'] = _df['eP(O|A)'] - _df['eP(O|nA)']
+        _df['uedP'] = np.diff(np.r_[0, _df['edP']])
         behavior[team] = pd.DataFrame(_df, columns=col)
     # Summary table
     logger.info("    - Summary table")
@@ -249,7 +251,7 @@ def load_behavioral(path, verbose=None):
     return summary, behavior
 
 
-def load_dp(path, per_team=True, verbose=None):
+def load_dp(path, column='edP', per_team=True, verbose=None):
     """Load the contingency array.
 
     This function load the dP generated using `behavioral_analysis`
@@ -258,6 +260,15 @@ def load_dp(path, per_team=True, verbose=None):
     ----------
     path : str
         Full path to the excel file
+    column : string | 'dP'
+        The column to extract from the table. Use either :
+
+            * 'edP' : estimated contingency
+            * 'uedP' : updated estimated contingency
+            * 'eOA' : estimated P(O|A)
+            * 'eOnA' : estimated P(O|nA)
+            * 'enOA' : estimated P(nO|A)
+            * 'enOnA' : estimated P(nO|nA)
     per_team : bool | True
         Get either the dP per team (i.e. a list of 15 vectors each one with a
         shape of (n_trials,)) or the concatenated version (i.e. a vector of
@@ -268,12 +279,18 @@ def load_dp(path, per_team=True, verbose=None):
     dp : list | array_like
         The contingency.
     """
+    col = dict(edP='edP', uedP='uedP', eOA='eP(O|A)', eOnA='eP(O|nA)',
+               enOA='eP(nO|A)', enOnA='eP(nO|nA)')
+    assert column in col.keys(), ("`column` should either be "
+                                  "%s" % ', '.join(col.keys()))
+    use_col = col[column]
     _, behavior = load_behavioral(path, verbose)
+    logger.info('    Extracting %s' % use_col)
     dp = []
     for k, i in behavior.items():
         if not isinstance(k, int):
             continue
-        dp += [list(i['edP'])]
+        dp += [list(i[use_col])]
     if not per_team:
         dp = np.r_[tuple(dp)]  # noqa
     return dp
