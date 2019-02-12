@@ -84,13 +84,13 @@ def _gcmi(data, dp, smooth):
     """Function to run in parralel."""
     if isinstance(smooth, int):
         vec = np.arange(smooth, data.shape[1] - smooth)
-        dp = np.tile(dp.reshape(-1, 1), (1, 2 * smooth)).ravel(order='F')
+        dp = np.tile(dp.reshape(-1, 1), (1, 2 * smooth + 1)).ravel(order='F')
     else:
         vec = np.arange(data.shape[1])
     gcmi = np.zeros((len(vec),), dtype=float)
     for num, k in enumerate(vec):
         if isinstance(smooth, int):
-            _data = data[:, k - smooth:k + smooth].ravel(order='F')
+            _data = data[:, k - smooth:k + smooth + 1].ravel(order='F')
         else:
             _data = data[:, k]
         gcmi[num] = gcmi_cc(_data, dp)
