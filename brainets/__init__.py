@@ -7,10 +7,11 @@ theory based tools.
 """
 import logging
 
-from .syslog import set_log_level
+from brainets import (behavior, gcmi, infodyn, spectral, stats, syslog, utils,  # noqa
+                      preprocessing)
 
 # Set 'info' as the default logging level
 logger = logging.getLogger('brainets')
-set_log_level('info')
+syslog.set_log_level('info')
 
 __version__ = "0.0.0"
