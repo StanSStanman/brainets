@@ -249,6 +249,36 @@ def load_behavioral(path, verbose=None):
     return summary, behavior
 
 
+def load_dp(path, per_team=True, verbose=None):
+    """Load the contingency array.
+
+    This function load the dP generated using `behavioral_analysis`
+
+    Parameters
+    ----------
+    path : str
+        Full path to the excel file
+    per_team : bool | True
+        Get either the dP per team (i.e. a list of 15 vectors each one with a
+        shape of (n_trials,)) or the concatenated version (i.e. a vector of
+        shape (600,))
+
+    Returns
+    -------
+    dp : list | array_like
+        The contingency.
+    """
+    _, behavior = load_behavioral(path, verbose)
+    dp = []
+    for k, i in behavior.items():
+        if not isinstance(k, int):
+            continue
+        dp += [list(i['edP'])]
+    if not per_team:
+        dp = np.r_[tuple(dp)]  # noqa
+    return dp
+
+
 def _xl_plot(c1, title='', xlabel='', ylabel='', height=15, width=25):
     """Quick and dirty excel plot fix."""
     c1.title = title
