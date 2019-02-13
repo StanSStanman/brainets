@@ -170,7 +170,7 @@ def _plot_single_subplot(ax, df, time, hemi, lobe, xticks=False, **kwargs):
     plt.title('%s lobe' % lobe)
     plt.yticks(np.linspace(-.5, n_t - 1.5, n_t, endpoint=True))
     ax.set_yticklabels(yticks)
-    plt.axvline(0, color='k', linewidth=3)
+    plt.axvline(0, color='w', linewidth=3)
     # Remove xticks
     ax.tick_params(axis='both', which='both', length=0)
     if not xticks:
