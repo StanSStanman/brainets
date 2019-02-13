@@ -8,7 +8,7 @@ theory based tools.
 import logging
 
 from brainets import (behavior, gcmi, infodyn, spectral, stats, syslog, utils,  # noqa
-                      preprocessing)
+                      preprocessing, plot, io)
 
 # Set 'info' as the default logging level
 logger = logging.getLogger('brainets')

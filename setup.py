@@ -39,7 +39,8 @@ setup(
         "scipy",
         "mne",
         "pandas",
-        "joblib"
+        "joblib",
+        "matplotlib"
     ],
     dependency_links=[],
     author=AUTHOR,
