@@ -54,7 +54,7 @@ def gcmi_cc_mne(x, dp, smooth=None, n_jobs=-1, verbose=None):
     # Check inputs
     if isinstance(x, (mne.Epochs, mne.EpochsArray,
                       mne.time_frequency.EpochsTFR)):
-        data = x.data
+        data = x.get_data()
     elif isinstance(x, np.ndarray):
         data = x
     else:
