@@ -261,14 +261,8 @@ def load_dp(path, column='edP', per_team=True, verbose=None):
     path : str
         Full path to the excel file
     column : string | 'dP'
-        The column to extract from the table. Use either :
-
-            * 'edP' : estimated contingency
-            * 'uedP' : updated estimated contingency
-            * 'eOA' : estimated P(O|A)
-            * 'eOnA' : estimated P(O|nA)
-            * 'enOA' : estimated P(nO|A)
-            * 'enOnA' : estimated P(nO|nA)
+        The column to extract from the table. For example, you can use 'edP',
+        'uedP', 'eP(O|A)', eP(O|nA), eP(nO|A), eP(nO|nA) etc.
     per_team : bool | True
         Get either the dP per team (i.e. a list of 15 vectors each one with a
         shape of (n_trials,)) or the concatenated version (i.e. a vector of
@@ -279,18 +273,13 @@ def load_dp(path, column='edP', per_team=True, verbose=None):
     dp : list | array_like
         The contingency.
     """
-    col = dict(edP='edP', uedP='uedP', eOA='eP(O|A)', eOnA='eP(O|nA)',
-               enOA='eP(nO|A)', enOnA='eP(nO|nA)')
-    assert column in col.keys(), ("`column` should either be "
-                                  "%s" % ', '.join(col.keys()))
-    use_col = col[column]
     _, behavior = load_behavioral(path, verbose)
-    logger.info('    Extracting %s' % use_col)
+    logger.info('    Extracting %s' % column)
     dp = []
     for k, i in behavior.items():
         if not isinstance(k, int):
             continue
-        dp += [list(i[use_col])]
+        dp += [list(i[column])]
     if not per_team:
         dp = np.r_[tuple(dp)]  # noqa
     return dp
