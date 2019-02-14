@@ -78,11 +78,12 @@ def plot_gcmi_split(data, time=None, modality='meg', seeg_roi=None, contrast=5,
                        "(-1.5, 1.5)")
 
     # Get colorbar limits
+    _data = np.array(df)
     if isinstance(contrast, (int, float)):
-        vmin = np.percentile(data, contrast)
-        vmax = np.percentile(data, 100 - contrast)
+        vmin = np.percentile(_data, contrast)
+        vmax = np.percentile(_data, 100 - contrast)
     else:
-        vmin, vmax = data.min(), data.max()
+        vmin, vmax = _data.min(), _data.max()
     kwargs = dict(cmap=cmap, vmin=vmin, vmax=vmax)
 
     # Generate plots
