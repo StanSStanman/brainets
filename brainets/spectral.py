@@ -96,7 +96,7 @@ def mt_hga_split(epoch, time_bandwidth=4., hga_start=60, hga_end=160,
     Step by step procedure :
 
         * Define a lineary spaced frequency vector (e.g. [60, 160]])
-        * Extract each sub-gamma band 
+        * Extract each sub-gamma band
         * Normalize each sub-band
         * Take the mean across sub-bands to obtain the final HG
 
@@ -113,7 +113,7 @@ def mt_hga_split(epoch, time_bandwidth=4., hga_start=60, hga_end=160,
     n_hga : int | None
         Number of HG sub-bands between (hga_start, hga_end)
     norm : {'1/f', 'constant'} | None
-        Normalization method before taking the mean across sub-gamma bands 
+        Normalization method before taking the mean across sub-gamma bands
     kw : dict | {}
         Additional arguments are passed to the `tfr_multitaper` function.
 
@@ -139,6 +139,9 @@ def mt_hga_split(epoch, time_bandwidth=4., hga_start=60, hga_end=160,
         tf_data *= freqs.reshape(1, 1, -1, 1)
     elif norm == 'constant':
         tf_data -= tf_data.mean(3, keepdims=True)
+    # Mean the data across sub-gamma bands
+    tf_data = tf_data.mean(2, keepdims=True)
+    freqs = np.array([tf.freqs.mean()])
     # Rebuilt the EpochsTFR
-    etf = EpochsTFR(tf.info, tf_data, tf.times, tf.freqs)
+    etf = EpochsTFR(tf.info, tf_data, tf.times, freqs)
     return etf.average() if need_average else etf

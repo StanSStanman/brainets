@@ -14,9 +14,12 @@ from brainets.syslog import set_log_level
 logger = logging.getLogger('brainets')
 
 
-def plot_gcmi_split(data, time=None, modality='meg', seeg_roi=None, contrast=5,
-                    cmap='viridis', title=None, verbose=None):
-    """Plot GCMI in splitted subplots, sorted using MarsAtlas.
+def plot_marsatlas(data, time=None, modality='meg', seeg_roi=None, contrast=5,
+                   cmap='viridis', title=None, verbose=None):
+    """Plot data sorted using MarsAtlas parcellation.
+
+    This function sort the data by hemisphere, lobe (frontal, occipital,
+    parietal, temporal and subcortical) and by roi.
 
     Parameters
     ----------
@@ -32,7 +35,9 @@ def plot_gcmi_split(data, time=None, modality='meg', seeg_roi=None, contrast=5,
         and a MarsAtlas column
     contrast : int | float
         Contrast to use for the plot. A contrast of 5 means that vmin is set to
-        5% of the data and vmax 95% of the data
+        5% of the data and vmax 95% of the data. If None, vmin and vmax are set
+        to the min and max of the data. Alternatively, you can also provide
+        a tuple to manually define it
     title : string | None
         Title of the figure
     cmap : string | 'viridis'
@@ -78,12 +83,13 @@ def plot_gcmi_split(data, time=None, modality='meg', seeg_roi=None, contrast=5,
                        "(-1.5, 1.5)")
 
     # Get colorbar limits
-    _data = np.array(df)
     if isinstance(contrast, (int, float)):
-        vmin = np.percentile(_data, contrast)
-        vmax = np.percentile(_data, 100 - contrast)
+        vmin = np.percentile(data, contrast)
+        vmax = np.percentile(data, 100 - contrast)
+    elif isinstance(contrast, (tuple, list)) and (len(contrast) == 2):
+        vmin, vmax = contrast
     else:
-        vmin, vmax = _data.min(), _data.max()
+        vmin, vmax = data.min(), data.max()
     kwargs = dict(cmap=cmap, vmin=vmin, vmax=vmax)
 
     # Generate plots
