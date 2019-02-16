@@ -54,7 +54,7 @@ def gcmi_cc_mne(x, dp, smooth=None, stat_method='cluster', n_perm=1000,
     pvalues : array_like | tuple
         p-values array of shape (n_channels, n_pts,)
     clusters : tuple
-        The selected clusters (only returned if `stat_method` is 'cluster')
+        The selected clusters (only if `stat_method` is 'cluster')
 
     Example
     -------
@@ -111,7 +111,7 @@ def gcmi_cc_mne(x, dp, smooth=None, stat_method='cluster', n_perm=1000,
     # -------------------------------------------------------------------------
     # Format outputs
     if not need_stat:
-        return np.asarray(out)
+        return np.asarray(out), None, None
     else:
         if stat_method == 'cluster':
             gcmi, pvalues, clusters = zip(*out)
@@ -120,7 +120,7 @@ def gcmi_cc_mne(x, dp, smooth=None, stat_method='cluster', n_perm=1000,
         elif stat_method == 'maxstat':
             gcmi, pvalues = zip(*out)
             gcmi, pvalues = np.stack(gcmi), np.stack(pvalues)
-            return gcmi, pvalues
+            return gcmi, pvalues, None
 
 
 ###############################################################################
