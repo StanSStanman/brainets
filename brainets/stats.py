@@ -127,5 +127,6 @@ def stat_gcmi_permutation(raw, dp, fcn, n_perm=1000):
         perm[k, :] = fcn(raw, dp_perm)
     # Get corrected p-values
     pvalues = np.ones((len(gcmi),), dtype='float')
-    pvalues[gcmi > perm.max()] = 1. / n_perm
-    return gcmi, pvalues
+    p_max = perm.max()
+    pvalues[gcmi > p_max] = 1. / n_perm
+    return gcmi, pvalues, p_max

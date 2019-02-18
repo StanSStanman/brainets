@@ -53,8 +53,14 @@ def gcmi_cc_mne(x, dp, smooth=None, stat_method='cluster', n_perm=1000,
         returned argument
     pvalues : array_like | tuple
         p-values array of shape (n_channels, n_pts,)
-    clusters : tuple
-        The selected clusters (only if `stat_method` is 'cluster')
+    supp : array_like | tuple
+        Additional output argument that depends on the selected statistical
+        mthod.
+
+            * If `stat_method` is 'cluster', this argument represents the list
+              of selected clusters for each channel (n_channels,)
+            * If `stat_method` is 'maxstat', this argument represents the
+              maximum permutation of each channel (n_channels,)
 
     Example
     -------
@@ -113,14 +119,10 @@ def gcmi_cc_mne(x, dp, smooth=None, stat_method='cluster', n_perm=1000,
     if not need_stat:
         return np.asarray(out), None, None
     else:
-        if stat_method == 'cluster':
-            gcmi, pvalues, clusters = zip(*out)
-            gcmi, pvalues = np.stack(gcmi), np.stack(pvalues)
-            return gcmi, pvalues, clusters
-        elif stat_method == 'maxstat':
-            gcmi, pvalues = zip(*out)
-            gcmi, pvalues = np.stack(gcmi), np.stack(pvalues)
-            return gcmi, pvalues, None
+        gcmi, pvalues, supp = zip(*out)
+        gcmi, pvalues = np.stack(gcmi), np.stack(pvalues)
+        supp = np.asarray(supp) if stat_method == 'maxstat' else supp
+        return gcmi, pvalues, supp
 
 
 ###############################################################################
@@ -195,12 +197,12 @@ if __name__ == '__main__':
 
     pval = np.ones((y.shape[2],))
     if not isinstance(n_perm, int):
-        gcmi = gcmi_cc_mne(y, x, **kw)
+        gcmi, _, _ = gcmi_cc_mne(y, x, **kw)
     elif isinstance(n_perm, int) and (stat_method == 'cluster'):
         gcmi, pvalues, cluster = gcmi_cc_mne(y, x, **kw)
         pval = pvalues.mean(0)
     elif isinstance(n_perm, int) and (stat_method == 'maxstat'):
-        gcmi, pvalues = gcmi_cc_mne(y, x, **kw)
+        gcmi, pvalues, p_max = gcmi_cc_mne(y, x, **kw)
         pval = pvalues.mean(0)
 
     plt.subplot(211)
