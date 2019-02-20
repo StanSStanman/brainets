@@ -19,7 +19,12 @@ Human Brain Mapping (2017) 38 p. 1541-1573 doi:10.1002/hbm.23471
 import numpy as np
 import scipy as sp
 import scipy.stats
-import warnings
+
+import logging
+from brainets.syslog import set_log_level
+
+logger = logging.getLogger('brainets')
+
 
 def ctransform(x):
     """Copula transformation (empirical CDF)
@@ -133,7 +138,7 @@ def mi_gg(x, y, biascorrect=True, demeaned=False):
     return I
 
 
-def gcmi_cc(x,y):
+def gcmi_cc(x,y, verbose=None):
     """Gaussian-Copula Mutual Information between two continuous variables.
     I = gcmi_cc(x,y) returns the MI between two (possibly multidimensional)
     continuous variables, x and y, estimated via a Gaussian copula.
@@ -141,7 +146,7 @@ def gcmi_cc(x,y):
     to dimensions/variables. (Samples first axis) 
     This provides a lower bound to the true MI value.
     """
-
+    set_log_level(verbose)
     x = np.atleast_2d(x)
     y = np.atleast_2d(y)
     if x.ndim > 2 or y.ndim > 2:
@@ -156,11 +161,11 @@ def gcmi_cc(x,y):
     # check for repeated values
     for xi in range(Nvarx):
         if (np.unique(x[xi,:]).size / float(Ntrl)) < 0.9:
-            warnings.warn("Input x has more than 10% repeated values")
+            logger.info("Input x has more than 10% repeated values")
             break
     for yi in range(Nvary):
         if (np.unique(y[yi,:]).size / float(Ntrl)) < 0.9:
-            warnings.warn("Input y has more than 10% repeated values")
+            logger.info("Input y has more than 10% repeated values")
             break
 
     # copula normalization
@@ -248,7 +253,7 @@ def mi_model_gd(x, y, Ym, biascorrect=True, demeaned=False):
     return I
 
 
-def gcmi_model_cd(x,y,Ym):
+def gcmi_model_cd(x,y,Ym, verbose=None):
     """Gaussian-Copula Mutual Information between a continuous and a discrete variable
      based on ANOVA style model comparison.
     I = gcmi_model_cd(x,y,Ym) returns the MI between the (possibly multidimensional)
@@ -259,7 +264,7 @@ def gcmi_model_cd(x,y,Ym):
     y should contain integer values in the range [0 Ym-1] (inclusive).
     See also: gcmi_mixture_cd
     """
-
+    set_log_level(verbose)
     x = np.atleast_2d(x)
     y = np.squeeze(y)
     if x.ndim > 2:
@@ -280,7 +285,7 @@ def gcmi_model_cd(x,y,Ym):
     # check for repeated values
     for xi in range(Nvarx):
         if (np.unique(x[xi,:]).size / float(Ntrl)) < 0.9:
-            warnings.warn("Input x has more than 10% repeated values")
+            logger.info("Input x has more than 10% repeated values")
             break
 
     # check values of discrete variable
@@ -393,7 +398,7 @@ def _norm_innerv(x, chC):
     return w
 
 
-def gcmi_mixture_cd(x,y,Ym):
+def gcmi_mixture_cd(x,y,Ym, verbose=None):
     """Gaussian-Copula Mutual Information between a continuous and a discrete variable
     calculated from a Gaussian mixture.
     The Gaussian mixture is fit using robust measures of location (median) and scale
@@ -406,7 +411,7 @@ def gcmi_mixture_cd(x,y,Ym):
     y should contain integer values in the range [0 Ym-1] (inclusive).
     See also: gcmi_model_cd
     """
-
+    set_log_level(verbose)
     x = np.atleast_2d(x)
     y = np.squeeze(y)
     if x.ndim > 2:
@@ -427,7 +432,7 @@ def gcmi_mixture_cd(x,y,Ym):
     # check for repeated values
     for xi in range(Nvarx):
         if (np.unique(x[xi,:]).size / float(Ntrl)) < 0.9:
-            warnings.warn("Input x has more than 10% repeated values")
+            logger.info("Input x has more than 10% repeated values")
             break
 
     # check values of discrete variable
@@ -530,7 +535,7 @@ def cmi_ggg(x, y, z, biascorrect=True, demeaned=False):
     return I
 
 
-def gccmi_ccc(x,y,z):
+def gccmi_ccc(x,y,z, verbose=None):
     """Gaussian-Copula CMI between three continuous variables.
     I = gccmi_ccc(x,y,z) returns the CMI between two (possibly multidimensional)
     continuous variables, x and y, conditioned on a third, z, estimated via a
@@ -538,7 +543,7 @@ def gccmi_ccc(x,y,z):
     If x and/or y are multivariate columns must correspond to samples, rows
     to dimensions/variables. (Samples first axis)
     """
-
+    set_log_level(verbose)
     x = np.atleast_2d(x)
     y = np.atleast_2d(y)
     z = np.atleast_2d(z)
@@ -556,15 +561,15 @@ def gccmi_ccc(x,y,z):
     # check for repeated values
     for xi in range(Nvarx):
         if (np.unique(x[xi,:]).size / float(Ntrl)) < 0.9:
-            warnings.warn("Input x has more than 10% repeated values")
+            logger.info("Input x has more than 10% repeated values")
             break
     for yi in range(Nvary):
         if (np.unique(y[yi,:]).size / float(Ntrl)) < 0.9:
-            warnings.warn("Input y has more than 10% repeated values")
+            logger.info("Input y has more than 10% repeated values")
             break
     for zi in range(Nvarz):
         if (np.unique(z[zi,:]).size / float(Ntrl)) < 0.9:
-            warnings.warn("Input y has more than 10% repeated values")
+            logger.info("Input y has more than 10% repeated values")
             break
 
     # copula normalization
@@ -576,7 +581,7 @@ def gccmi_ccc(x,y,z):
     return I
 
 
-def gccmi_ccd(x,y,z,Zm):
+def gccmi_ccd(x,y,z,Zm, verbose=None):
     """Gaussian-Copula CMI between 2 continuous variables conditioned on a discrete variable.
     I = gccmi_ccd(x,y,z,Zm) returns the CMI between two (possibly multidimensional)
     continuous variables, x and y, conditioned on a third discrete variable z, estimated
@@ -585,7 +590,7 @@ def gccmi_ccd(x,y,z,Zm):
     to dimensions/variables. (Samples first axis)
     z should contain integer values in the range [0 Zm-1] (inclusive).
     """
-
+    set_log_level(verbose)
     x = np.atleast_2d(x)
     y = np.atleast_2d(y)
     if x.ndim > 2 or y.ndim > 2:
@@ -607,11 +612,11 @@ def gccmi_ccd(x,y,z,Zm):
     # check for repeated values
     for xi in range(Nvarx):
         if (np.unique(x[xi,:]).size / float(Ntrl)) < 0.9:
-            warnings.warn("Input x has more than 10% repeated values")
+            logger.info("Input x has more than 10% repeated values")
             break
     for yi in range(Nvary):
         if (np.unique(y[yi,:]).size / float(Ntrl)) < 0.9:
-            warnings.warn("Input y has more than 10% repeated values")
+            logger.info("Input y has more than 10% repeated values")
             break
 
     # check values of discrete variable
