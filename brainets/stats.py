@@ -1,6 +1,8 @@
 """Statistical functions."""
 import numpy as np
 
+from joblib import Parallel, delayed
+
 
 def cluster_detection(raw, th, min_cluster_size=None):
     """Detect clusters in a raw vector.
@@ -29,7 +31,7 @@ def cluster_detection(raw, th, min_cluster_size=None):
     return [slice(s, e) for s, e in zip(_start, _end) if e - s >= min_cl]
 
 
-def stat_gcmi_cluster_based(raw, dp, fcn, n_perm=1000, threshold=1):
+def stat_gcmi_cluster_based(raw, dp, fcn, n_perm=1000, threshold=1, n_jobs=-1):
     """Perform cluster based statistics.
 
     This function perform a cluster based statistic test between the data
@@ -55,6 +57,8 @@ def stat_gcmi_cluster_based(raw, dp, fcn, n_perm=1000, threshold=1):
     threshold : float | 1.
         Threshold for cluster detection according to a percentile of data
         repartition (by default 1%)
+    n_jobs : int | -1
+        Number of jobs to use for parallel computing (use -1 to use all jobs)
 
     Returns
     -------
@@ -73,12 +77,9 @@ def stat_gcmi_cluster_based(raw, dp, fcn, n_perm=1000, threshold=1):
     # Get the GCMI sum inside clusters
     gcmi_cl = np.array([gcmi[k].sum() for k in clusters])
     # Perform permutations
-    perm_clusters = np.zeros((n_perm, len(clusters)), dtype=float)
-    for k in range(n_perm):
-        dp_perm = dp.copy()
-        np.random.shuffle(dp_perm)
-        gcmi_perm = fcn(raw, dp_perm)
-        perm_clusters[k, :] = np.array([gcmi_perm[k].sum() for k in clusters])
+    perm_clusters = Parallel(n_jobs=n_jobs)(delayed(_para_gcmi_cluster)(
+        dp, raw, clusters, fcn) for k in range(n_perm))
+    perm_clusters = np.array(perm_clusters)
     # Get associated p-values
     pval_cl = (gcmi_cl.reshape(1, -1) < perm_clusters).sum(0) / n_perm
     pvalues = np.ones((len(gcmi),), dtype=float)
@@ -87,7 +88,15 @@ def stat_gcmi_cluster_based(raw, dp, fcn, n_perm=1000, threshold=1):
     return gcmi, pvalues, clusters
 
 
-def stat_gcmi_permutation(raw, dp, fcn, n_perm=1000):
+def _para_gcmi_cluster(dp, raw, clusters, fcn):
+    """Parallel function to be runned for permutations."""
+    dp_perm = dp.copy()
+    np.random.shuffle(dp_perm)
+    gcmi_perm = fcn(raw, dp_perm)
+    return np.array([gcmi_perm[k].sum() for k in clusters])
+
+
+def stat_gcmi_permutation(raw, dp, fcn, n_perm=1000, n_jobs=-1):
     """Perform GCMI permutations and correct for multiple comparisons.
 
     Parameters
@@ -107,6 +116,8 @@ def stat_gcmi_permutation(raw, dp, fcn, n_perm=1000):
         trials of shape (n_pts,)
     n_perm : int | 1000
         Number of permutations to perform
+    n_jobs : int | -1
+        Number of jobs to use for parallel computing (use -1 to use all jobs)
 
     Returns
     -------
@@ -120,13 +131,18 @@ def stat_gcmi_permutation(raw, dp, fcn, n_perm=1000):
     # Get non modified gcmi
     gcmi = fcn(raw, dp)
     # Perform permutations
-    perm = np.zeros((n_perm, len(gcmi)), dtype=float)
-    for k in range(n_perm):
-        dp_perm = dp.copy()
-        np.random.shuffle(dp_perm)
-        perm[k, :] = fcn(raw, dp_perm)
+    perm = Parallel(n_jobs=n_jobs)(delayed(_para_gcmi_maxstat)(
+        dp, raw, fcn) for k in range(n_perm))
+    perm = np.array(perm)
     # Get corrected p-values
     pvalues = np.ones((len(gcmi),), dtype='float')
     p_max = perm.max()
     pvalues[gcmi > p_max] = 1. / n_perm
     return gcmi, pvalues, p_max
+
+
+def _para_gcmi_maxstat(dp, raw, fcn):
+    """Parallel function to be runned for permutations."""
+    dp_perm = dp.copy()
+    np.random.shuffle(dp_perm)
+    return fcn(raw, dp_perm)
