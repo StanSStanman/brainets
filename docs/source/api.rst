@@ -45,6 +45,10 @@ GCMI
 
 .. currentmodule:: brainets.gcmi
 
+.. automodule:: brainets.gcmi
+   :no-members:
+   :no-inherited-members:
+
 .. autosummary::
    :toctree: generated/
 
