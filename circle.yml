@@ -77,7 +77,6 @@ jobs:
                 cd docs;
                 rm -rf build/doctrees build/brainets.github.io
                 make clean;
-                mkdir build;
                 git clone -b gh-pages --single-branch --no-checkout --depth 1 https://github.com/brainets/brainets.git build/brainets.github.io
                 touch build/brainets.github.io/.nojekyll;
                 make html
