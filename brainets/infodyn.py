@@ -68,13 +68,6 @@ def gcmi_cc_mne(x, dp, smooth=None, decim=None, stat_method='cluster',
               of selected clusters for each channel (n_channels,)
             * If `stat_method` is 'maxstat', this argument represents the
               maximum permutation of each channel (n_channels,)
-
-    Example
-    -------
-    >>> Run gcmi between high-gamma power and dP
-    >>> from brainets.spectral import mt_hga
-    >>> tf = mt_hga(...)
-    >>> gcmi_cc_mne(tf, dp)
     """
     # -------------------------------------------------------------------------
     # Inputs checking
@@ -219,13 +212,13 @@ if __name__ == '__main__':
 
     ###########################################################################
     n_trials = 30
-    n_channels = 3
+    n_channels = 1
     n_perm = 30
-    stat_method = 'cluster'
+    stat_method = 'maxstat'
     smooth = 5
-    decim = 10
+    decim = 1
     threshold = 25
-    as_single_channel = True
+    as_single_channel = False
     n_jobs = -1
     ###########################################################################
 
@@ -249,8 +242,8 @@ if __name__ == '__main__':
         gcmi, pvalues, p_max = gcmi_cc_mne(y, x, **kw)
         pval = pvalues.mean(0)
 
-    # plt.subplot(211)
-    # plt.plot(gcmi.mean(0))
-    # plt.subplot(212)
-    # plt.plot(pval)
-    # plt.show()
+    plt.subplot(211)
+    plt.plot(gcmi.mean(0))
+    plt.subplot(212)
+    plt.plot(pval)
+    plt.show()
