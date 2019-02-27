@@ -131,3 +131,19 @@ I/O
    get_data_path
    load_marsatlas
    mne_epochstfr_to_epochs
+
+
+Utilites
+++++++++
+
+.. currentmodule:: brainets.utils
+
+.. automodule:: brainets.utils
+   :no-members:
+   :no-inherited-members:
+
+.. autosummary::
+   :toctree: generated/
+
+   normalize
+   moving_average
