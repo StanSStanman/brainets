@@ -4,33 +4,6 @@ import numpy as np
 from joblib import Parallel, delayed
 
 
-def cluster_detection(raw, th, min_cluster_size=None):
-    """Detect clusters in a raw vector.
-
-    Parameters
-    ----------
-    raw : array_like
-        1D array in which clusters need to be detected
-    th : float
-        The threshold
-    min_cluster_size : int | None
-        Minimum cluster size to detect
-
-    Returns
-    -------
-    clusters : list
-        List of slice objects indicating where cluster are located
-    """
-    min_cl = -1 if not isinstance(min_cluster_size, int) else min_cluster_size
-    # Transient detection
-    _transient = np.diff(np.r_[0, (raw > th).astype(int), 0])
-    # Build the (start, end)
-    _start = np.where(_transient == 1.)[0]
-    _end = np.where(_transient == -1.)[0]
-    assert len(_start) == len(_end)
-    return [slice(s, e) for s, e in zip(_start, _end) if e - s >= min_cl]
-
-
 def stat_gcmi_cluster_based(raw, dp, fcn, n_perm=1000, threshold=1, n_jobs=-1):
     """Perform cluster based statistics.
 
@@ -40,7 +13,7 @@ def stat_gcmi_cluster_based(raw, dp, fcn, n_perm=1000, threshold=1, n_jobs=-1):
     Parameters
     ----------
     raw : array_like
-        The data of shape (n_trials, n_pts)
+        The data (e.g. HGA) of shape (n_trials, n_roi, n_pts)
     dp : array_like
         The contingency variable
     fcn : function
@@ -67,10 +40,26 @@ def stat_gcmi_cluster_based(raw, dp, fcn, n_perm=1000, threshold=1, n_jobs=-1):
     pvalues : array_like
         P-values  array of shape (n_pts,)
     """
-    assert raw.ndim == 2, "Only works for two-dimentional arrays"
-    assert raw.shape[0] == len(dp), "`raw` shape should be (n_trials, n_pts)"
+    assert (raw.ndim == 3) and (raw.shape[0] == len(dp))
+
+    # True GCMI estimation
+    gcmi = fcn(raw, dp)  # (n_roi, n_pts)
+
+    # Compute permutations
+    perm = Parallel(n_jobs=n_jobs)(delayed(_compute_gcmi_permutations)(
+        raw, dp, fcn) for k in range(n_perm))
+    perm = np.asarray(perm)  # (n_perm, n_roi, n_pts)
+
+    # Infer statistical threshold
+    th_pval = np.sum(perm < gcmi, axis=0) / n_perm
+    print(th_pval)
+    0/0
+
+    ###########################################################################
+    # Cluster detection and reduction
+
+
     # Get non modified gcmi
-    gcmi = fcn(raw, dp)
     # Cluster detection
     _th = np.percentile(gcmi, 100. - threshold)
     clusters = cluster_detection(gcmi, _th)
@@ -86,6 +75,66 @@ def stat_gcmi_cluster_based(raw, dp, fcn, n_perm=1000, threshold=1, n_jobs=-1):
     for c, p in zip(clusters, pval_cl):
         pvalues[c] = p
     return gcmi, pvalues, clusters
+
+
+def _compute_gcmi_permutations(raw, dp, fcn):
+    """Compute GCMI between the data and the shuffle version of dp."""
+    dp_perm = dp.copy()
+    np.random.shuffle(dp_perm)
+    return fcn(raw, dp_perm)
+
+
+
+def cluster_reduction(gcmi, th, reduce='sum'):
+    """Detect and reduce clusters.
+
+    The following steps are performed :
+
+        * Detect where the data exceed the threshold
+        * Detect clusters inside each roi
+        * Reduce each detected cluster
+
+    Parameters
+    ----------
+    gcmi : array_like
+        GCMI 2D array of shape (n_roi, n_times) in which clusters need to be
+        detected and reduced
+    th : float
+        The threshold
+    reduce : {'sum', 'length', 'max'}
+        The function to reduce GCMI values inside the cluster. Use either :
+
+            * 'sum' : cluster-mass
+            * 'max' : cluster-height
+            * 'length' : cluster-extent
+
+    Returns
+    -------
+    gcmi_cl : list
+        List of length n_roi. Each element of the list contains the reduced
+        gcmi inside each cluster. This is applied across the time dimension
+    clusters : list
+        List of length n_roi containing the detected clusters
+    """
+    # Reducing function
+    fcn = dict(sum=np.sum, max=np.max, length=len)[reduce]
+
+    # Transient detection
+    is_over = (gcmi > th).astype(int)
+    pad = np.zeros((gcmi.shape[0], 1), dtype=float)
+    transients = np.diff(np.c_[pad, is_over, pad], axis=1)
+
+    # Get values inside clusters
+    gcmi_cl, clusters = [], []
+    for r, tr in zip(gcmi, transients):
+        start, end = np.where(tr == 1.)[0], np.where(tr == -1.)[0]
+        assert len(start) == len(end)
+        cl = [slice(s, e) for s, e in zip(start, end)]
+        clusters += [cl]
+        gcmi_cl += [[fcn(r[c]) for c in cl]]
+
+    return gcmi_cl, clusters
+
 
 
 def _para_gcmi_cluster(dp, raw, clusters, fcn):
@@ -146,3 +195,12 @@ def _para_gcmi_maxstat(dp, raw, fcn):
     dp_perm = dp.copy()
     np.random.shuffle(dp_perm)
     return fcn(raw, dp_perm)
+
+
+if __name__ == '__main__':
+    x = np.random.rand(80, 10, 100)
+    dp = np.random.rand(80)
+
+    def fcn(x, dp): return np.sum(x, axis=0) * dp[17]
+
+    stat_gcmi_cluster_based(x, dp, fcn, n_perm=20)

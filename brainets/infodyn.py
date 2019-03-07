@@ -23,7 +23,7 @@ def gcmi_cc_mne(x, dp, smooth=None, decim=None, stat_method='cluster',
     x : mne.Epochs | mne.EpochsTFR | str
         The data to use. Should either be :
 
-            * array of shape (n_trials, n_channels, n_pts)
+            * array of shape (n_trials, n_roi, n_pts)
             * mne.Epochs or mne.EpochsArray
             * mne.EpochsTFR (i.e. non-averaged power)
             * Path (string) to an epoch file (-epo.fif) or TFR file (tfr.h5)
@@ -55,19 +55,19 @@ def gcmi_cc_mne(x, dp, smooth=None, decim=None, stat_method='cluster',
     Returns
     -------
     gcmi : array_like
-        The gcmi array of shape (n_channels, n_pts) where n_pts is the number
+        The gcmi array of shape (n_roi, n_pts) where n_pts is the number
         of time points. If not permutations are performed, this is the only
         returned argument
     pvalues : array_like | tuple
-        p-values array of shape (n_channels, n_pts,)
+        p-values array of shape (n_roi, n_pts,)
     supp : array_like | tuple
         Additional output argument that depends on the selected statistical
         mthod.
 
             * If `stat_method` is 'cluster', this argument represents the list
-              of selected clusters for each channel (n_channels,)
+              of selected clusters for each channel (n_roi,)
             * If `stat_method` is 'maxstat', this argument represents the
-              maximum permutation of each channel (n_channels,)
+              maximum permutation of each channel (n_roi,)
     """
     # -------------------------------------------------------------------------
     # Inputs checking
