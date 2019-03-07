@@ -81,6 +81,7 @@ Info dynamic
 .. autosummary::
    :toctree: generated/
 
+   gcmi_prepare_data
    gcmi_cc_mne
 
 

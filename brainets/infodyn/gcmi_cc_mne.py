@@ -167,6 +167,7 @@ def _get_gcmi_smoothing(smooth, decim):
     """Get the GCMI function i.e. if a smoothing is needed or not."""
     if isinstance(smooth, int):  # smoothing needed
         logger.info("    Compute GCMI using %i time points" % (2 * smooth))
+
         def fcn(data, dp):  # noqa
             # dP need to be repeated
             dp = np.tile(dp.reshape(-1, 1), (1, 2 * smooth + 1)).ravel(
@@ -180,6 +181,7 @@ def _get_gcmi_smoothing(smooth, decim):
             return gcmi
     else:                        # no smoothing
         logger.info("    Compute GCMI without smoothing")
+
         def fcn(data, dp):  # noqa
             # Compute the gcmi across time
             vec = np.arange(0, data.shape[1], decim)
