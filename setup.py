@@ -39,6 +39,7 @@ setup(
         "scipy",
         "mne",
         "pandas",
+        "xarray",
         "joblib",
         "matplotlib"
     ],
