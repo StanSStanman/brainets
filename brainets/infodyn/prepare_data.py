@@ -10,8 +10,8 @@ from brainets.gcmi import copnorm
 logger = logging.getLogger('brainets')
 
 
-def gccmi_prepare_data(data, dp, roi, times=None, gcrn=True, aggregate='mean',
-                       modality='meg', verbose=None):
+def gcmi_prepare_data(data, dp, roi, times=None, gcrn=True, aggregate='mean',
+                      modality='meg', verbose=None):
     """Prepare the M/SEEG data before computing the GCMI.
 
     This function performs the following steps :
@@ -146,6 +146,6 @@ if __name__ == '__main__':
     x = [x_1, x_2]
     dp = [dp_1, dp_2]
     roi = [roi_1, roi_2]
-    data = gccmi_prepare_data(x, dp, roi, times=times, aggregate='mean')
+    data = gcmi_prepare_data(x, dp, roi, times=times, aggregate='mean')
     print(data[0].T)
     # -------------------------------------------------------------------------

@@ -1,21 +1,27 @@
 """Statistical functions."""
 import numpy as np
 
+from mne.stats import fdr_correction, bonferroni_correction
+
 from joblib import Parallel, delayed
 
 
-def stat_gcmi_cluster_based(raw, dp, fcn, n_perm=1000, threshold=1, n_jobs=-1):
+def stat_gcmi_cluster_based(x, fcn, n_perm=1000, correction='fdr', alpha=.05,
+                            reduce='sum', n_jobs=-1):
     """Perform cluster based statistics.
 
-    This function perform a cluster based statistic test between the data
-    and a second continous variable.
+    This function performs the following steps :
+
+        * Compute the true GCMI
+        * Compute the permutations and infer the threshold
+        * Find and reduce the clusters
+        * Detect the clusters on the permutations
+        * Compare the cluster size between the true GCMI and the permutations
 
     Parameters
     ----------
-    raw : array_like
-        The data (e.g. HGA) of shape (n_trials, n_roi, n_pts)
-    dp : array_like
-        The contingency variable
+    x : list
+        List of data per subject.
     fcn : function
         The function to use to evaluate the information shared. This function
         should accept two inputs :
@@ -27,65 +33,78 @@ def stat_gcmi_cluster_based(raw, dp, fcn, n_perm=1000, threshold=1, n_jobs=-1):
         trials of shape (n_pts,)
     n_perm : int | 1000
         Number of permutations to perform
-    threshold : float | 1.
-        Threshold for cluster detection according to a percentile of data
-        repartition (by default 1%)
+    correction : {'fdr', 'bonferroni', 'maxstat'}
+        Correction type to apply to the p-values for the inference of the
+        threshold to use to detect the clusters.
+    alpha : float | .05
+        Error rate to use if correction is 'fdr' or 'bonferroni'
+    reduce : {'sum', 'length', 'max'}
+        The function to reduce GCMI values inside the cluster. Use either :
+
+            * 'sum' : cluster-mass
+            * 'max' : cluster-height
+            * 'length' : cluster-extent
     n_jobs : int | -1
         Number of jobs to use for parallel computing (use -1 to use all jobs)
 
     Returns
     -------
     gcmi : array_like
-        True GCMI estimations of shape (n_pts,)
+        True GCMI estimations of shape (n_roi, n_pts)
     pvalues : array_like
-        P-values  array of shape (n_pts,)
+        Corrected p-values of shape (n_roi, n_pts)
     """
-    assert (raw.ndim == 3) and (raw.shape[0] == len(dp))
-
     # True GCMI estimation
-    gcmi = fcn(raw, dp)  # (n_roi, n_pts)
-
+    gcmi = fcn(x)  # (n_roi, n_pts)
     # Compute permutations
-    perm = Parallel(n_jobs=n_jobs)(delayed(_compute_gcmi_permutations)(
-        raw, dp, fcn) for k in range(n_perm))
+    perm = Parallel(n_jobs=n_jobs)(delayed(_gccmi_permutations)(
+        x, fcn) for k in range(n_perm))
     perm = np.asarray(perm)  # (n_perm, n_roi, n_pts)
-
     # Infer statistical threshold
-    th_pval = np.sum(perm < gcmi, axis=0) / n_perm
-    print(th_pval)
-    0/0
-
-    ###########################################################################
+    if correction in ['fdr', 'bonferroni']:
+        fcs = fdr_correction if correction == 'fdr' else bonferroni_correction
+        th_pval = np.sum(gcmi < perm, axis=0) / n_perm
+        pv = fcs(th_pval, alpha)[1]
+        th = gcmi[pv < alpha].min()
+    elif correction == 'maxstat':
+        th = perm.max()
     # Cluster detection and reduction
+    gcmi_cl, clusters = cluster_reduction(gcmi, th, reduce=reduce)
+    # Find clusters on permutations
+    perm_cl = []
+    for p in range(n_perm):
+        perm_cl += [cluster_reduction(perm[p, ...], th, reduce=reduce,
+                                      maximum=True)[0]]
+    perm_cl = np.asarray(perm_cl).max(1)  # (n_perm,)
+    # Test cluster size significance
+    pval_cl = [[(i < perm_cl).sum() / n_perm for i in k] for k in gcmi_cl]
+    # Reformat p-values
+    pvalues, mask = np.ones_like(gcmi), np.ones_like(gcmi, dtype=bool)
+    for num, (rp, rc) in enumerate(zip(pval_cl, clusters)):
+        for p, c in zip(rp, rc):
+            pvalues[num, c] = p
+            mask[num, c] = False
+    pvalues = np.ma.masked_array(pvalues, mask=mask)
+    return gcmi, pvalues
 
 
-    # Get non modified gcmi
-    # Cluster detection
-    _th = np.percentile(gcmi, 100. - threshold)
-    clusters = cluster_detection(gcmi, _th)
-    # Get the GCMI sum inside clusters
-    gcmi_cl = np.array([gcmi[k].sum() for k in clusters])
-    # Perform permutations
-    perm_clusters = Parallel(n_jobs=n_jobs)(delayed(_para_gcmi_cluster)(
-        dp, raw, clusters, fcn) for k in range(n_perm))
-    perm_clusters = np.array(perm_clusters)
-    # Get associated p-values
-    pval_cl = (gcmi_cl.reshape(1, -1) < perm_clusters).sum(0) / n_perm
-    pvalues = np.ones((len(gcmi),), dtype=float)
-    for c, p in zip(clusters, pval_cl):
-        pvalues[c] = p
-    return gcmi, pvalues, clusters
+def _gccmi_permutations(x, fcn):
+    """Compute GCMI between the data and the shuffle version of dp.
+
+    Note that this function compute inner permutations i.e. randomly permutes
+    the dp per subject
+    """
+    x_perm = []
+    for r in x:
+        dp, z = r.dp.values, r.attrs['z']
+        for u_z in np.unique(z):
+            is_z = z == u_z
+            dp[is_z] = np.random.permutation(dp[is_z])
+        x_perm += [r.reindex({'dp': dp}, copy=True)]
+    return fcn(x_perm)
 
 
-def _compute_gcmi_permutations(raw, dp, fcn):
-    """Compute GCMI between the data and the shuffle version of dp."""
-    dp_perm = dp.copy()
-    np.random.shuffle(dp_perm)
-    return fcn(raw, dp_perm)
-
-
-
-def cluster_reduction(gcmi, th, reduce='sum'):
+def cluster_reduction(gcmi, th, reduce='sum', maximum=False):
     """Detect and reduce clusters.
 
     The following steps are performed :
@@ -107,6 +126,8 @@ def cluster_reduction(gcmi, th, reduce='sum'):
             * 'sum' : cluster-mass
             * 'max' : cluster-height
             * 'length' : cluster-extent
+    maximum : bool | False
+        Get only clusters with maximum size
 
     Returns
     -------
@@ -133,19 +154,14 @@ def cluster_reduction(gcmi, th, reduce='sum'):
         clusters += [cl]
         gcmi_cl += [[fcn(r[c]) for c in cl]]
 
+    # Max size
+    if maximum:
+        gcmi_cl = [np.max(k) if len(k) else 0. for k in gcmi_cl]
+
     return gcmi_cl, clusters
 
 
-
-def _para_gcmi_cluster(dp, raw, clusters, fcn):
-    """Parallel function to be runned for permutations."""
-    dp_perm = dp.copy()
-    np.random.shuffle(dp_perm)
-    gcmi_perm = fcn(raw, dp_perm)
-    return np.array([gcmi_perm[k].sum() for k in clusters])
-
-
-def stat_gcmi_permutation(raw, dp, fcn, n_perm=1000, n_jobs=-1):
+def stat_gcmi_permutation(x, fcn, n_perm=1000, n_jobs=-1):
     """Perform GCMI permutations and correct for multiple comparisons.
 
     Parameters
@@ -171,36 +187,18 @@ def stat_gcmi_permutation(raw, dp, fcn, n_perm=1000, n_jobs=-1):
     Returns
     -------
     gcmi : array_like
-        True GCMI estimations of shape (n_pts,)
+        True GCMI estimations of shape (n_roi, n_pts)
     pvalues : array_like
-        Corrected p-values across the time-dimension of shape (n_pts,)
+        Corrected p-values of shape (n_roi, n_pts)
     """
-    assert raw.ndim == 2, "Only works for two-dimentional arrays"
-    assert raw.shape[0] == len(dp), "`raw` shape should be (n_trials, n_pts)"
-    # Get non modified gcmi
-    gcmi = fcn(raw, dp)
-    # Perform permutations
-    perm = Parallel(n_jobs=n_jobs)(delayed(_para_gcmi_maxstat)(
-        dp, raw, fcn) for k in range(n_perm))
-    perm = np.array(perm)
+    # True GCMI estimation
+    gcmi = fcn(x)  # (n_roi, n_pts)
+    # Compute permutations
+    perm = Parallel(n_jobs=n_jobs)(delayed(_gccmi_permutations)(
+        x, fcn) for k in range(n_perm))
+    perm = np.asarray(perm)  # (n_perm, n_roi, n_pts)
     # Get corrected p-values
-    pvalues = np.ones((len(gcmi),), dtype='float')
+    pvalues = np.ones_like(gcmi, dtype='float')
     p_max = perm.max()
     pvalues[gcmi > p_max] = 1. / n_perm
-    return gcmi, pvalues, p_max
-
-
-def _para_gcmi_maxstat(dp, raw, fcn):
-    """Parallel function to be runned for permutations."""
-    dp_perm = dp.copy()
-    np.random.shuffle(dp_perm)
-    return fcn(raw, dp_perm)
-
-
-if __name__ == '__main__':
-    x = np.random.rand(80, 10, 100)
-    dp = np.random.rand(80)
-
-    def fcn(x, dp): return np.sum(x, axis=0) * dp[17]
-
-    stat_gcmi_cluster_based(x, dp, fcn, n_perm=20)
+    return gcmi, pvalues

@@ -82,7 +82,7 @@ Info dynamic
    :toctree: generated/
 
    gcmi_prepare_data
-   gcmi_cc_mne
+   gcmi_corrected
 
 
 Statistics
@@ -99,7 +99,7 @@ Statistics
 
    stat_gcmi_cluster_based
    stat_gcmi_permutation
-   cluster_detection
+   cluster_reduction
 
 
 Plot
