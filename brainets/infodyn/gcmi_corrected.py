@@ -2,6 +2,7 @@
 import logging
 
 import numpy as np
+import pandas as pd
 from xarray import DataArray
 
 from brainets.gcmi import gccmi_ccd
@@ -12,7 +13,7 @@ logger = logging.getLogger('brainets')
 
 
 def gcmi_corrected(x, smooth=None, decim=None, n_perm=1000, stat='cluster',
-                   n_jobs=-1, verbose=None, **kw):
+                   n_jobs=-1, as_dataframe=False, verbose=None, **kw):
     """Compute the Gaussian-Copula Mutual Information.
 
     This function computes the GCMI across subjects, roi and time. It also
@@ -34,6 +35,8 @@ def gcmi_corrected(x, smooth=None, decim=None, n_perm=1000, stat='cluster',
         for a cluster-based approach or 'maxstat' for using maximum statistics
     n_jobs : int | -1
         Number of jobs to use for parallel computing (use -1 to use all jobs)
+    as_dataframe : bool | False
+        Return results as an ROI organized DataFrame
     kw : dict | {}
         Additional input arguments to pass to the selected statistic method
         (see :func:`brainets.stats.stat_gcmi_cluster_based` and
@@ -43,9 +46,10 @@ def gcmi_corrected(x, smooth=None, decim=None, n_perm=1000, stat='cluster',
     -------
     gcmi : array_like
         The gcmi array of shape (n_roi, n_pts) where n_pts is the number
-        of time points.
+        of time points. Output type depends on the `as_dataframe` input
     pvalues : array_like | tuple
-        p-values array of shape (n_roi, n_pts,)
+        p-values array of shape (n_roi, n_pts,). Output type depends on the
+        `as_dataframe` input
 
     See also
     --------
@@ -76,6 +80,15 @@ def gcmi_corrected(x, smooth=None, decim=None, n_perm=1000, stat='cluster',
         logger.info("Compute GCMI using maximum statistics")
         gcmi, pvalues = stat_gcmi_permutation(x, fcn, n_perm=n_perm,
                                               n_jobs=n_jobs)
+
+    # Pandas formatting
+    if as_dataframe:
+        roi = [k.name for k in x]
+        times = np.linspace(x[0].times[0], x[0].times[-1], gcmi.shape[1],
+                            endpoint=True)
+        gcmi = pd.DataFrame(gcmi.T, index=times, columns=roi)
+        if isinstance(pvalues, (np.ndarray, np.ma.core.MaskedArray)):
+            pvalues = pd.DataFrame(pvalues.T, index=times, columns=roi)
 
     return gcmi, pvalues
 
@@ -145,9 +158,9 @@ if __name__ == '__main__':
     roi = [roi_1, roi_2]
     x = gcmi_prepare_data(x, dp, roi, times=times, aggregate='mean')
 
-    gcmi, pvalues = gcmi_corrected(x, smooth=5, n_perm=100, alpha=0.01,
+    gcmi, pvalues = gcmi_corrected(x, smooth=5, n_perm=10, alpha=0.01,
                                    correction='fdr', stat='cluster',
-                                   reduce='max')
+                                   reduce='max', as_dataframe=False)
 
     plt.subplot(121)
     plt.pcolormesh(gcmi)
