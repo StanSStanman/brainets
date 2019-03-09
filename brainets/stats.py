@@ -100,7 +100,7 @@ def _gccmi_permutations(x, fcn):
         for u_z in np.unique(z):
             is_z = z == u_z
             dp[is_z] = np.random.permutation(dp[is_z])
-        x_perm += [r.reindex({'dp': dp}, copy=True)]
+        x_perm += [r.assign_coords(dp=dp)]
     return fcn(x_perm)
 
 
