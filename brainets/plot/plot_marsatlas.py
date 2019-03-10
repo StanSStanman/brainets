@@ -50,7 +50,7 @@ def plot_marsatlas(data, time=None, modality='meg', seeg_roi=None, contrast=5,
     """
     set_log_level(verbose)
     assert modality in ['meg', 'seeg']
-    assert isinstance(data, np.ndarray) and (data.ndim == 2)
+    assert isinstance(data, (np.ndarray, pd.DataFrame)) and (data.ndim == 2)
 
     # Load MarsAtlas DataFrame
     logger.info('    Load MarsAtlas labels')
@@ -58,7 +58,11 @@ def plot_marsatlas(data, time=None, modality='meg', seeg_roi=None, contrast=5,
 
     # Prepare the data before plotting according to the recording modality
     logger.info('    Prepare the data for %s modality' % modality)
-    if modality == 'meg':
+    if isinstance(data, pd.DataFrame):
+        logger.info("    DataFrame input detected")
+        df, df_ma = _prepare_data_df(df_ma, data)
+        time = (data.index[0], data.index[-1])
+    elif modality == 'meg':
         assert data.shape[1] == len(df_ma), ("`data` should have a shape of "
                                              "(n_pts, %i)" % len(df_ma))
         df, df_ma = _prepare_data_meg(df_ma, data)
@@ -99,6 +103,23 @@ def plot_marsatlas(data, time=None, modality='meg', seeg_roi=None, contrast=5,
     return fig_l, fig_r
 
 
+###############################################################################
+###############################################################################
+#                            PREPARATION FUNCTIONS
+###############################################################################
+###############################################################################
+
+
+def _prepare_data_df(df_ma, data):
+    """Prepare dataframe data for plotting."""
+    data_roi = []
+    for num, n in enumerate(df_ma['LR_Name']):
+        if n in data.columns:
+            data_roi += [np.array(data.loc[:, n])]
+        else:
+            data_roi += [np.full((data.shape[0]), -1.)]
+    return pd.DataFrame(np.stack(data_roi).T), df_ma
+
 def _prepare_data_seeg(df_ma, data, seeg_roi):
     """Prepare sEEG data for plotting."""
     # Group roi by MarsAtlas
@@ -122,6 +143,13 @@ def _prepare_data_seeg(df_ma, data, seeg_roi):
 def _prepare_data_meg(df_ma, data):
     """Prepare MEG data for plotting."""
     return pd.DataFrame(data), df_ma
+
+
+###############################################################################
+###############################################################################
+#                            PLOTTING FUNCTIONS
+###############################################################################
+###############################################################################
 
 
 def _plot_gcmi_hemi(df, hemi, time, title, **kwargs):
