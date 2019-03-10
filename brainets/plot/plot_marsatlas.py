@@ -23,8 +23,8 @@ def plot_marsatlas(data, time=None, modality='meg', seeg_roi=None, contrast=5,
 
     Parameters
     ----------
-    data : array_like
-        GCMI result across ROI of shape (n_pts, n_roi)
+    data : array_like | DataFrame
+        GCMI result across ROI of shape (n_pts, n_roi).
     time : list | tuple | None
         Time boundaries. Should be (time_start, time_end). If None, a default
         time vector is set between (-1.5, 1.5)
