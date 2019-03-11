@@ -7,8 +7,8 @@ from setuptools import setup, find_packages
 __version__ = "0.0.0"
 NAME = 'BraiNets'
 AUTHOR = "BraiNets"
-MAINTAINER = "Andrea Brovelli"
-EMAIL = 'andrea.brovelli@univ-amu.fr'
+MAINTAINER = "Etienne Combrisson"
+EMAIL = 'e.combrisson@gmail.com'
 KEYWORDS = "multi-modal fmri meg seeg causality gaussian copula"
 DESCRIPTION = "Multi-modal causality"
 URL = 'https://github.com/brainets/brainets'

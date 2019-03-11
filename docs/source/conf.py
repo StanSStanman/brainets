@@ -21,8 +21,8 @@ sys.path.insert(0, os.path.abspath('.'))
 # -- Project information -----------------------------------------------------
 
 project = 'brainets'
-copyright = '2019, Andrea Brovelli'
-author = 'Andréa Brovelli'
+copyright = '2019, Etienne Combrisson'
+author = 'Etienne Combrisson'
 
 # The short X.Y version
 version = '0.0.0'
@@ -161,7 +161,7 @@ latex_elements = {
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
     (master_doc, 'brainets.tex', 'brainets Documentation',
-     'Andrea Brovelli', 'manual'),
+     'Etienne Combrisson', 'manual'),
 ]
 
 
