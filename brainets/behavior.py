@@ -4,7 +4,7 @@ import logging
 
 import numpy as np
 import pandas as pd
-from scipy import special
+from scipy import special, stats
 
 from brainets.syslog import set_log_level
 
@@ -144,7 +144,7 @@ def behavioral_analysis(tr_team, tr_play, tr_win, save_as=None,
     behavior = dict()
     col = ['Team', 'Play', 'Win', 'O|A', 'nO|A', 'O|nA', 'nO|nA', 'f(O|A)',
            'f(nO|A)', 'f(O|nA)', 'f(nO|nA)', 'eP(O|A)', 'eP(O|nA)', 'edP',
-           'uedP']
+           'log_edP', 'uedP', 'kld']
     logger.info('    - Split cumulative sum per team')
     for team in np.unique(tr_team):
         _df = dict()
@@ -164,7 +164,15 @@ def behavioral_analysis(tr_team, tr_play, tr_win, save_as=None,
         _df['eP(O|A)'] = _df['f(O|A)'] / (_df['f(O|A)'] + _df['f(nO|A)'])
         _df['eP(O|nA)'] = _df['f(O|nA)'] / (_df['f(O|nA)'] + _df['f(nO|nA)'])
         _df['edP'] = _df['eP(O|A)'] - _df['eP(O|nA)']
+        _df['log_edP'] = np.log(_df['eP(O|A)']) - np.log(_df['eP(O|nA)'])
         _df['uedP'] = np.diff(np.r_[0, _df['edP']])
+        # Kullback-Leibler divergence
+        t = zip(_df['f(O|A)'], _df['f(nO|A)'], _df['f(O|nA)'], _df['f(nO|nA)'])
+        kld = []
+        for oa, noa, ona, nona in t:
+            dist_1, dist_2 = pdf(oa, noa), pdf(ona, nona)
+            kld += [stats.entropy(dist_1, dist_2, base=10)]
+        _df['kld'] = kld
         behavior[team] = pd.DataFrame(_df, columns=col)
     # Summary table
     logger.info("    - Summary table")
