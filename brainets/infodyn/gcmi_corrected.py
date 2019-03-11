@@ -158,8 +158,8 @@ if __name__ == '__main__':
     roi = [roi_1, roi_2]
     x = gcmi_prepare_data(x, dp, roi, times=times, aggregate='mean')
 
-    gcmi, pvalues = gcmi_corrected(x, smooth=5, n_perm=10, alpha=0.01,
-                                   correction='fdr', stat='cluster',
+    gcmi, pvalues = gcmi_corrected(x, smooth=5, n_perm=30, alpha=0.05,
+                                   correction='bonferroni', stat='cluster',
                                    reduce='max', as_dataframe=False)
 
     plt.subplot(121)
