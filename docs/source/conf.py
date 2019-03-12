@@ -15,7 +15,8 @@
 import os
 import sys
 import sphinx_bootstrap_theme
-sys.path.insert(0, os.path.abspath('.'))
+# sys.path.insert(0, os.path.abspath('.'))
+sys.path.insert(0, os.path.abspath('sphinxext'))
 
 
 # -- Project information -----------------------------------------------------
@@ -49,6 +50,7 @@ extensions = [
     'sphinx.ext.viewcode',
     'sphinx.ext.githubpages',
     'sphinx.ext.autosummary',
+    'sphinx_gallery.gen_gallery',
     'numpydoc'
 ]
 
@@ -103,10 +105,30 @@ html_theme_options = {
     'navbar_fixed_top': True,
     'navbar_links': [
                      ("Installation", "install"),
-                     ("API", "api"),
                      ("Authors", "authors"),
+                     ("API", "api"),
+                     ("Examples", "auto_examples/index"),
                      ],
 }
+
+sphinx_gallery_conf = {
+    # path to your examples scripts
+    'examples_dirs': '../../examples',
+    'sphinx_gallery': None,
+    'reference_url': {
+        'visbrain': None,
+        'matplotlib': 'http://matplotlib.org',
+        'numpy': 'http://docs.scipy.org/doc/numpy',
+        'scipy': 'http://docs.scipy.org/doc/scipy/reference',
+    },
+    'gallery_dirs': 'auto_examples',
+    'backreferences_dir': 'generated',
+    # 'thumbnail_size': (100, 100),
+}
+
+numpydoc_show_class_members = False
+numpydoc_class_members_toctree = False
+numpydoc_use_blockquotes = False
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the

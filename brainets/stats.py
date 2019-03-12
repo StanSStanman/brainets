@@ -64,7 +64,7 @@ def stat_gcmi_cluster_based(x, fcn, n_perm=1000, correction='fdr', alpha=.05,
     if correction in ['fdr', 'bonferroni']:
         fcs = fdr_correction if correction == 'fdr' else bonferroni_correction
         th_pval = np.sum(gcmi < perm, axis=0) / n_perm
-        th = gcmi[fcs(th_pval, alpha)[0]].min()
+        th = gcmi[~fcs(th_pval, alpha)[0]].max()
     elif correction == 'maxstat':
         th = np.percentile(perm.max(axis=(1, 2)), 100. * (1. - alpha))
     # Cluster detection and reduction

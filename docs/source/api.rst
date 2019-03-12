@@ -40,32 +40,6 @@ Spectral
    mt_hga_split
 
 
-GCMI
-++++
-
-.. currentmodule:: brainets.gcmi
-
-.. automodule:: brainets.gcmi
-   :no-members:
-   :no-inherited-members:
-
-.. autosummary::
-   :toctree: generated/
-
-.. autosummary::
-   :toctree: generated/
-
-   gcmi_cc
-   gcmi_model_cd
-   gccmi_ccc
-   gccmi_ccd
-   gcmi_mixture_cd
-   cmi_ggg
-   mi_gg
-   mi_model_gd
-   mi_mixture_gd
-
-
 Info dynamic
 ++++++++++++
 
@@ -83,6 +57,7 @@ Info dynamic
 
    gcmi_prepare_data
    gcmi_corrected
+   gcmi_random_dataset
 
 
 Statistics
@@ -148,3 +123,30 @@ Utilites
 
    normalize
    moving_average
+
+
+GCMI
+++++
+
+.. currentmodule:: brainets.gcmi
+
+.. automodule:: brainets.gcmi
+   :no-members:
+   :no-inherited-members:
+
+.. autosummary::
+   :toctree: generated/
+
+.. autosummary::
+   :toctree: generated/
+
+   gcmi_cc
+   gcmi_model_cd
+   gccmi_ccc
+   gccmi_ccd
+   gcmi_mixture_cd
+   cmi_ggg
+   mi_gg
+   mi_model_gd
+   mi_mixture_gd
+
