@@ -144,7 +144,7 @@ def behavioral_analysis(tr_team, tr_play, tr_win, save_as=None,
     behavior = dict()
     col = ['Team', 'Play', 'Win', 'O|A', 'nO|A', 'O|nA', 'nO|nA', 'f(O|A)',
            'f(nO|A)', 'f(O|nA)', 'f(nO|nA)', 'eP(O|A)', 'eP(O|nA)', 'edP',
-           'log_edP', 'uedP', 'kld']
+           'log_edP', 'uedP', 'rpe', 'surprise', 'cho_uncho', 'kld']
     logger.info('    - Split cumulative sum per team')
     for team in np.unique(tr_team):
         _df = dict()
@@ -166,6 +166,19 @@ def behavioral_analysis(tr_team, tr_play, tr_win, save_as=None,
         _df['edP'] = _df['eP(O|A)'] - _df['eP(O|nA)']
         _df['log_edP'] = np.log(_df['eP(O|A)']) - np.log(_df['eP(O|nA)'])
         _df['uedP'] = np.diff(np.r_[0, _df['edP']])
+        _df['rpe'] = np.diff(np.r_[0, _df['eP(O|A)']])
+        # Surprise
+        _win = _df['Win'].astype(bool)
+        _surprise = np.zeros_like(_df['eP(O|A)'])
+        _surprise[_win] = -np.log(_df['eP(O|A)'][_win])
+        _surprise[~_win] = -np.log(1. - _df['eP(O|A)'][~_win])
+        _df['surprise'] = _surprise
+        # Chosen - unchosen
+        _play = _df['Play'].astype(bool)
+        _cho = np.zeros_like(_surprise)
+        _cho[_play] = (_df['eP(O|A)'] - _df['eP(O|nA)'])[_play]
+        _cho[~_play] = (_df['eP(O|nA)'] - _df['eP(O|A)'])[~_play]
+        _df['cho_uncho'] = _cho
         # Kullback-Leibler divergence
         t = zip(_df['f(O|A)'], _df['f(nO|A)'], _df['f(O|nA)'], _df['f(nO|nA)'])
         kld = []

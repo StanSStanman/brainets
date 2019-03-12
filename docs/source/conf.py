@@ -106,6 +106,7 @@ html_theme_options = {
     'navbar_links': [
                      ("Installation", "install"),
                      ("Authors", "authors"),
+                     ("Documentation", "doc"),
                      ("API", "api"),
                      ("Examples", "auto_examples/index"),
                      ],

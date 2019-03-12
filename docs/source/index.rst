@@ -18,6 +18,7 @@ Brainets
    api.rst
    install.rst
    authors.rst
+   doc.rst
 
 
 
