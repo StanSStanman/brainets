@@ -38,6 +38,11 @@ print(np.c_[tr_team, tr_play, tr_win])
 # Now you've the triggers for a single subject properly organized, you can run
 # the behavioral analysis.
 
+###############################################################################
+# .. note::
+#     I strongly recommend to install the openpyxl package if you want to have
+#     the plot embedded inside your excel table
+
 modality = 'meg'  # {'meg', 'seeg'}
 save_as = 'subj1_behavioral_analysis.xlsx'
 behavioral_analysis(tr_team, tr_play, tr_win, modality=modality,

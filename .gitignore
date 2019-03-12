@@ -67,6 +67,7 @@ instance/
 docs/_build/
 docs/build/
 docs/source/generated
+docs/source/auto_examples
 
 # PyBuilder
 target/
@@ -102,6 +103,9 @@ venv.bak/
 # mkdocs documentation
 /site
 /generated
+
+*.xlsx
+*.zip
 
 # mypy
 .mypy_cache/
