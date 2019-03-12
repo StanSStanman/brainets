@@ -9,6 +9,8 @@ import numpy as np
 
 from brainets.behavior import behavioral_analysis, load_dp
 
+import matplotlib.pyplot as plt
+
 ###############################################################################
 # Organize your triggers
 ###############################################################################
@@ -45,9 +47,30 @@ print(np.c_[tr_team, tr_play, tr_win])
 
 modality = 'meg'  # {'meg', 'seeg'}
 save_as = 'subj1_behavioral_analysis.xlsx'
+
 behavioral_analysis(tr_team, tr_play, tr_win, modality=modality,
                     save_as=save_as)
 
 ###############################################################################
 # Load a variable in the generated table
 ###############################################################################
+# The line above is going to save you behavioral analysis inside an excel file.
+# If you want to load a variable that is inside this table you can use the
+# :func:`brainets.behavior.load_dp` function
+
+# Load the delta rules
+uedp = load_dp(save_as, column='uedP', per_team=False)
+# Load the Kullback–Leibler divergence
+kld = load_dp(save_as, column='kld', per_team=False)
+
+plt.subplot(121)
+plt.bar(tr_team, uedp)
+plt.xlabel('Team number'), plt.ylabel('Delta')
+plt.title('Delta')
+
+plt.subplot(122)
+plt.bar(tr_team, kld, color='red')
+plt.xlabel('Team number'), plt.ylabel('Delta')
+plt.title('Kullback–Leibler divergence')
+
+plt.show()
