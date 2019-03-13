@@ -7,7 +7,8 @@ task (M/SEEG)
 """
 import numpy as np
 
-from brainets.behavior import behavioral_analysis, load_dp
+from brainets.behavior import behavioral_analysis, load_dp, load_behavioral
+from brainets.plot import plot_behavioral
 
 import matplotlib.pyplot as plt
 
@@ -52,6 +53,18 @@ behavioral_analysis(tr_team, tr_play, tr_win, modality=modality,
                     save_as=save_as)
 
 ###############################################################################
+# Summarize behavioral variables across subjects
+###############################################################################
+# Once you run the behavioral analysis across subjects, you can use the
+# :func:`brainets.plot.plot_behavioral` function to generate a pdf report to
+# summarize behavioral analysis across subjects. Here, we only illustrate the
+# report for a single subject
+
+report = 'report.pdf'
+files = dict(subject_1=save_as)
+plot_behavioral(report, files)
+
+###############################################################################
 # Load a variable in the generated table
 ###############################################################################
 # The line above is going to save you behavioral analysis inside an excel file.
@@ -62,6 +75,10 @@ behavioral_analysis(tr_team, tr_play, tr_win, modality=modality,
 uedp = load_dp(save_as, column='uedP', per_team=False)
 # Load the Kullback–Leibler divergence
 kld = load_dp(save_as, column='kld', per_team=False)
+
+# Alternatively, you can load the entire Excel file :
+summary, beh = load_behavioral(save_as, concat=True)
+print(summary)
 
 plt.subplot(121)
 plt.bar(tr_team, uedp)

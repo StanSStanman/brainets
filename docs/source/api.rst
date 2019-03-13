@@ -89,6 +89,7 @@ Plot
 .. autosummary::
    :toctree: generated/
 
+   plot_behavioral
    plot_marsatlas
 
 

@@ -124,6 +124,12 @@ def behavioral_analysis(tr_team, tr_play, tr_win, save_as=None,
     behavior : dict
         Dictionary organize by team number in which conditional probabilities
         and cumulative sum are saved.
+
+    See also
+    --------
+    :func:`brainets.behavior.load_behavioral`
+    :func:`brainets.behavior.load_dp`
+    :func:`brainets.plot.plot_behavioral`
     """
     set_log_level(verbose)
     # Sanity check
@@ -236,7 +242,7 @@ def behavioral_analysis(tr_team, tr_play, tr_win, save_as=None,
     return summary, behavior
 
 
-def load_behavioral(path, verbose=None):
+def load_behavioral(path, concat=False, verbose=None):
     """Load the behavioral analysis excel file of a single subject.
 
     The purpose of this function is to load the excel file that have been
@@ -246,6 +252,8 @@ def load_behavioral(path, verbose=None):
     ----------
     path : str
         Full path to the excel file
+    concat : bool | False
+        Concatenate the dataframes across teams
 
     Returns
     -------
@@ -254,6 +262,10 @@ def load_behavioral(path, verbose=None):
     behavior : dict
         A dictionary where the keys refer to the team number. Items are
         dataframes with all of the info per trial.
+
+    See also
+    --------
+    :func:`brainets.behavior.load_dp`
     """
     assert os.path.isfile(path)
     set_log_level(verbose)
@@ -262,13 +274,21 @@ def load_behavioral(path, verbose=None):
     sheet_names = xl.sheet_names
     assert sheet_names[0] == 'Summary'
     # Get the summary
-    logger.info('    - Reading summary')
+    logger.info('    Reading summary')
     summary = xl.parse('Summary')
     # Read team sheet
     behavior = dict()
-    logger.info('    - Reading team')
+    logger.info('    Reading team')
     for s in sheet_names[1::]:
         behavior[int(s.split('Team ')[1])] = xl.parse(s)
+    # Concatenate
+    if concat:
+        logger.info('    Concatenate dataframes')
+        keys = np.sort(list(behavior.keys()))
+        _beh = []
+        for k in keys:
+            _beh += [behavior[k]]
+        behavior = pd.concat(_beh).reset_index()
     return summary, behavior
 
 
@@ -293,6 +313,10 @@ def load_dp(path, column='edP', per_team=True, verbose=None):
     -------
     dp : list | array_like
         The contingency.
+
+    See also
+    --------
+    :func:`brainets.behavior.load_behavioral`
     """
     _, behavior = load_behavioral(path, verbose)
     logger.info('    Extracting %s' % column)
