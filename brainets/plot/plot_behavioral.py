@@ -12,6 +12,8 @@ def plot_behavioral(report, files, variables=['edP', 'uedP', 'surprise',
     This function can be used to summarize behavioral variables across subjects
     (it uses the output of the :func:`brainets.behavior.behavioral_analysis`)
 
+    Note that this function uses the seaborn library to generate the plots
+
     Parameters
     ----------
     report : str
