@@ -6,12 +6,13 @@ from xarray import DataArray, concat
 import mne
 
 from brainets.gcmi import copnorm
+from brainets.io import load_marsatlas
 
 logger = logging.getLogger('brainets')
 
 
-def gcmi_prepare_data(data, dp, roi, times=None, gcrn=True, aggregate='mean',
-                      modality='meg', verbose=None):
+def gcmi_prepare_data(data, dp, roi=None, times=None, gcrn=True,
+                      aggregate='mean', modality='meg', verbose=None):
     """Prepare the M/SEEG data before computing the GCMI.
 
     This function performs the following steps :
@@ -30,9 +31,10 @@ def gcmi_prepare_data(data, dp, roi, times=None, gcrn=True, aggregate='mean',
         Alternatively, you can also give a xarray.DataArray instance
     dp : list
         List of arrays of shape (n_trials,) describing the behavioral variable
-    roi : list
+    roi : list | None
         List of arrays of shape (n_channels,) describing the ROI name of each
-        channel
+        channel. If None and if the modality is MEG, the ROI are inferred using
+        MarsAtlas
     times : array_like | None
         The time vector. All of the subject should have the number of time
         points. If None, a default (-1.5, 1.5) secondes vector is created. If
@@ -53,6 +55,11 @@ def gcmi_prepare_data(data, dp, roi, times=None, gcrn=True, aggregate='mean',
     assert len(data) == len(dp)
     n_suj = len(data)
     logger.info("Prepare the data of %i subjects" % n_suj)
+    # Infer roi
+    if (roi is None) and (modality == 'meg'):
+        logger.info("    Infer the ROI for the MEG data")
+        _roi = list(load_marsatlas()['LR_Name'])
+        roi = [_roi for k in range(len(data))]
     # check data type and convert it to numpy array
     data = [_prepare_single_subject(k, i, j, times, n) for n, (
             k, i, j) in enumerate(zip(data, dp, roi))]
@@ -101,7 +108,7 @@ def _prepare_single_subject(x, dp, roi, times, n):
         x = mne.read_epochs(x)
         times = x.times
     # Check inputs
-    if isinstance(x, (mne.Epochs, mne.EpochsArray,
+    if isinstance(x, (mne.Epochs, mne.EpochsArray, mne.epochs.EpochsFIF,
                       mne.time_frequency.EpochsTFR)):
         data = x.get_data()
     elif isinstance(x, np.ndarray):
