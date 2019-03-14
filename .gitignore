@@ -107,6 +107,7 @@ venv.bak/
 *.xlsx
 *.zip
 *.pdf
+*.prof
 
 # mypy
 .mypy_cache/

@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 from xarray import DataArray
 
-from brainets.gcmi import gccmi_ccd
+from brainets.fast_gcmi import gccmi_ccd
 from brainets.stats import stat_gcmi_cluster_based, stat_gcmi_permutation
 
 
@@ -112,8 +112,7 @@ def _get_gcmi_smoothing(smooth, decim):
                     order='F')
                 for nt, k in enumerate(vec):
                     _data = data[:, k - smooth:k + smooth + 1].ravel(order='F')
-                    gcmi[nr, nt] = gccmi_ccd(_data, dp, z, zm,
-                                             verbose=False)[0]
+                    gcmi[nr, nt] = gccmi_ccd(_data, dp, z, zm)
             return gcmi
     else:                        # no smoothing
         logger.info("    Compute GCMI without smoothing")
