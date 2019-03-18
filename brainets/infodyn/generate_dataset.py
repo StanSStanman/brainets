@@ -59,7 +59,7 @@ def gcmi_random_dataset(n_trials=30, n_pts=200, n_channels=10, n_roi=3,
 
     # -------------------------------------------------------------------------
     # Built a random dataset
-    data = rnd.rand(n_trials, n_channels, n_pts)
+    data = 100. * rnd.rand(n_trials, n_channels, n_pts)
     data = savgol_filter(data, 25, 3, axis=2)
     dp = np.sort(rnd.uniform(-1., 1., (n_trials)))
 

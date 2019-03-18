@@ -138,16 +138,9 @@ GCMI
 .. autosummary::
    :toctree: generated/
 
-.. autosummary::
-   :toctree: generated/
-
-   gcmi_cc
-   gcmi_model_cd
-   gccmi_ccc
-   gccmi_ccd
-   gcmi_mixture_cd
-   cmi_ggg
-   mi_gg
-   mi_model_gd
-   mi_mixture_gd
-
+   nd_gccmi_ccd
+   nd_mi_gg
+   ctransform
+   copnorm
+   nd_reshape
+   nd_shape_checking

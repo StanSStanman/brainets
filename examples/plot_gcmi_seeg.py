@@ -1,12 +1,13 @@
 """
-Compute GCMI on random datasets
-===============================
+Compute GCMI on a random SEEG datasets
+======================================
 
 This example illustrates :
 
-    * How to organize the data (M/SEEG)
-    * How to prepare the data
+    * How to prepare the SEEG data
     * Compute the GCMI
+
+For SEEG data, this example assumes that the ROI are labelled using MarsAtlas.
 """
 import numpy as np
 
@@ -23,11 +24,13 @@ import matplotlib.pyplot as plt
 # concatenate the datasets (data, dP and roi)
 
 # Subject 1
-data_1, dp_1, roi_1 = gcmi_random_dataset(n_trials=30, random_state=1)
+data_1, dp_1, roi_1 = gcmi_random_dataset(n_trials=300, random_state=1,
+                                          n_channels=30, n_roi=15)
 # Subject 2
-data_2, dp_2, roi_2 = gcmi_random_dataset(n_trials=40, random_state=2)
+data_2, dp_2, roi_2 = gcmi_random_dataset(n_trials=400, random_state=2,
+                                          n_channels=25, n_roi=10)
 
-# Concatenate the data of the three subjects
+# Concatenate the data of the two subjects
 data = [data_1, data_2]
 dp = [dp_1, dp_2]
 roi = [roi_1, roi_2]
@@ -39,41 +42,32 @@ times = np.linspace(-1.5, 1.5, data_1.shape[-1], endpoint=True)
 # Prepare the data before computing the GCMI.
 
 # Prepare the data
-x = gcmi_prepare_data(data, dp, roi, times=times)
-
-# Mean inside each roi
-data_roi = np.c_[tuple([k.data.mean(0) for k in x])].T
+x = gcmi_prepare_data(data, dp, roi=roi, times=times, smooth=None)
+smooth_times = list(x[0].times.values)
 
 ###############################################################################
 # Compute the GCMI
 ###############################################################################
 
-smooth = 5
 stat = 'cluster'  # {'cluster', 'maxstat'}
-correction = 'fdr'  # {'fdr', 'bonferroni', 'maxstat'}
+correction = 'bonferroni'  # {'fdr', 'bonferroni', 'maxstat'}
 alpha = .05
-n_perm = 30
+n_perm = 100
 
-gcmi, pvalues = gcmi_corrected(x, n_perm=n_perm, smooth=smooth, stat=stat,
-                               decim=None, correction=correction, alpha=alpha)
+gcmi, pvalues = gcmi_corrected(x, n_perm=n_perm, stat=stat, alpha=alpha,
+                               correction=correction, n_jobs=-1)
 
 ###############################################################################
 # Plot the data, GCMI and p-values
 ###############################################################################
 
-plt.subplot(311)
-plt.plot(times, data_roi.T)
-plt.xlabel('Times (s)'), plt.ylabel('uV/hz')
-plt.title('Data per roi')
-
-plt.subplot(312)
-times = np.linspace(-1.5, 1.5, gcmi.shape[1], endpoint=True)
-plt.plot(times, gcmi.T)
+plt.subplot(211)
+plt.plot(smooth_times, gcmi.T)
 plt.xlabel('Times (s)'), plt.ylabel('au')
 plt.title('GCMI per roi')
 
-plt.subplot(313)
-plt.plot(times, pvalues.T)
+plt.subplot(212)
+plt.plot(smooth_times, pvalues.T)
 plt.xlabel('Times (s)'), plt.ylabel('p-values')
 plt.title('P-values per roi')
 
