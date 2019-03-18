@@ -51,7 +51,7 @@ alpha = .05
 n_perm = 100
 
 gcmi, pvalues = gcmi_corrected(x, n_perm=n_perm, stat=stat, alpha=alpha,
-                               correction=correction, n_jobs=-1)
+                               correction=correction, n_jobs=1)
 
 ###############################################################################
 # Compute the GCMI

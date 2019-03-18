@@ -10,9 +10,9 @@ from brainets.io import load_marsatlas, set_log_level
 logger = logging.getLogger('brainets')
 
 
-def gcmi_random_dataset(n_trials=30, n_pts=200, n_channels=10, n_roi=3,
-                        clusters=[(30, 70), (90, 130), (170, 190)],
-                        random_state=None, verbose=None):
+def gcmi_random_dataset(n_trials=10, n_pts=100, n_channels=10, n_roi=3,
+                        clusters=[(10, 30), (50, 70)], random_state=None,
+                        verbose=None):
     """Generate a random dataset to test GCMI related functions.
 
     This function can be used to test or to check if the preparation and
