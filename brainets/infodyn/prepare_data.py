@@ -146,7 +146,7 @@ def _prepare_single_subject(x, dp, roi, times, n, smooth, decim):
     # -------------------------------------------------------------------------
     # Check inputs
     if isinstance(x, (mne.Epochs, mne.EpochsArray, mne.epochs.EpochsFIF,
-                      mne.time_frequency.EpochsTFR)):
+                      mne.time_frequency.EpochsTFR, mne.epochs.BaseEpochs)):
         data = x.get_data()
     elif isinstance(x, np.ndarray):
         data = x
